@@ -96,7 +96,17 @@ int main()
 		printf("control type %d value %ld\r\n", caps.ControlType, value);
 		printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\r\n");
 	}
-
+	    float pixelSize;
+    ret = SVBGetSensorPixelSize(cameraID, &pixelSize);
+    printf("pixel size %f\n", pixelSize);
+	printf("////////////////////////////\n");
+	// set exposure
+	SVB_BOOL isAuto = SVB_FALSE;
+	ret = SVBSetControlValue(cameraID, SVB_EXPOSURE, 30000, isAuto);
+	long value;
+	// SVB_BOOL isAuto;
+	ret = SVBGetControlValue(cameraID, SVB_EXPOSURE, &value, &isAuto);
+	printf("Exposure time: %ld\r\n", value);
 	////////////////////////////////////////////
 	ret = SVBSetROIFormat(cameraID, 0, 0, 
 	                      cameraProperty.MaxWidth, 
@@ -129,19 +139,18 @@ int main()
 	assert(ret == SVB_SUCCESS);
 	//SVB_IMG_TYPE pImageType[8]={SVB_IMG_RAW10};
 	ret = SVBSetOutputImageType(cameraID, SVB_IMG_RGB24);
-    float pixelSize;
-    ret = SVBGetSensorPixelSize(cameraID, &pixelSize);
-    printf("pixel size %f\n", pixelSize);
-	SVB_IMG_TYPE pImageType[8];
-    ret = SVBGetOutputImageType(cameraID, pImageType);
-	printf("image type: %d\n", *pImageType);
+	printf("set image type ret:%d\n", ret);
+	SVB_IMG_TYPE pImageType;
+    ret = SVBGetOutputImageType(cameraID, &pImageType);
+	printf("ret:%d image type: %d\n", ret, pImageType);
 	/////////////////////////////////////////////////////////////
 	int bufferSize = (cameraProperty.MaxBitDepth + 7) / 8 * width * height * 4;
-	printf("buffersize:%d width:%d height:%d\n", bufferSize, width, height);
+	printf("buffersize:%d width:%d height:%d, max bitwidth: %d \n", 
+	        bufferSize, width, height, cameraProperty.MaxBitDepth);
 	unsigned char *pBuffer = new unsigned char[bufferSize];
 	int captureNum = 0;
 	while (true) {
-		ret = SVBGetVideoData(cameraID, pBuffer, bufferSize, 100);
+		ret = SVBGetVideoData(cameraID, pBuffer, bufferSize, 1000);
 		if (ret != SVB_SUCCESS)
 			continue;
 		char path[256];
